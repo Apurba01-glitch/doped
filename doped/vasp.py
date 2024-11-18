@@ -22,6 +22,7 @@ from pymatgen.core.structure import Structure
 from pymatgen.io.vasp.inputs import BadIncarWarning, Kpoints, Poscar, Potcar
 from pymatgen.io.vasp.sets import VaspInputSet
 from tqdm import tqdm
+import platform
 
 from doped import _doped_obj_properties_methods, _ignore_pmg_warnings
 from doped.core import DefectEntry
@@ -114,10 +115,17 @@ class DopedKpoints(Kpoints):
         error handling.
         """
         try:
-            with open("/dev/null", "w") as f:
-                f.write(self.comment)  # breaks if encoding error will occur, so we rewrite
-            return super().__repr__()
-
+            os = platform.system()
+            if os == "Linux":
+                with open("/dev/null", "w") as f:
+                    f.write(self.comment)  # breaks if encoding error will occur, so we rewrite
+                return super().__repr__()
+            elif os == "Windows":
+                with open("null", "w") as f:
+                    f.write(self.comment)
+                return super().__repr__()
+            else:
+                return super().__repr__()
         except UnicodeEncodeError:
             self.comment = self.comment.replace("Å⁻³", "Angstrom^(-3)").replace("Γ", "Gamma")
             return super().__repr__()
